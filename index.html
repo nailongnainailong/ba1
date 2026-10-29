@@ -1,0 +1,360 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>合成大 ba</title>
+<meta name="theme-color" content="#eaf4fb">
+<meta name="description" content="把两个一样的学生撞在一起，她们会变成下一级。">
+<meta property="og:title" content="合成大 ba">
+<meta property="og:description" content="kei → alice → koharu → miyako → kazusa → reisa → natsu → kotori → kokona → midori → last">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%237ec8e3'/%3E%3Ccircle cx='50' cy='50' r='46' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='17' fill='%234a9fe0'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#22303c;
+    --paper:#eef7fd;
+    --line:rgba(34,48,60,.12);
+    --accent:#3f9fd8;
+    --accent2:#f48fb1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 640px at 12% -12%, #dff2ff 0%, transparent 62%),
+      radial-gradient(900px 560px at 102% 4%, #ffe3ee 0%, transparent 58%),
+      linear-gradient(160deg,#f7fcff 0%,#eaf4fb 48%,#e3eef8 100%);
+    display:flex; align-items:center; justify-content:center;
+    padding:14px; overflow:auto;
+    overscroll-behavior:none; min-height:100dvh;
+  }
+  #app{display:flex; gap:16px; align-items:center; max-width:100%}
+
+  /* ---------------- 舞台 ---------------- */
+  #stage{
+    position:relative; flex:none;
+    width:min(46vw, 54vh, var(--stage-max, 380px));
+    aspect-ratio:380 / 560;
+    border-radius:24px; background:#fff; overflow:hidden;
+    box-shadow:0 24px 54px -20px rgba(42,92,124,.5), 0 0 0 1px rgba(255,255,255,.8) inset;
+  }
+  #game{display:block; width:100%; height:100%; touch-action:none; cursor:pointer}
+
+  #banner{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(240,249,255,.88); backdrop-filter:blur(6px); padding:22px; text-align:center;
+  }
+  #banner.show{display:flex}
+  #banner .card{animation:pop .35s cubic-bezier(.2,1.6,.4,1); max-width:100%}
+  #banner h2{margin:0 0 8px; font-size:26px; letter-spacing:.4px}
+  #banner p{margin:0 0 16px; color:#5f7386; font-size:13px; line-height:1.6}
+  #banner p:empty{display:none; margin:0}
+  #banner h2:last-child{margin-bottom:16px}
+  .bigbtn{
+    border:0; cursor:pointer; font:inherit; font-weight:700; color:#fff;
+    background:linear-gradient(180deg,#59b6e8,#3f9fd8);
+    padding:11px 28px; border-radius:999px; font-size:15px;
+    box-shadow:0 10px 20px -8px rgba(63,159,216,.9); transition:transform .12s;
+  }
+  .bigbtn:active{transform:translateY(1px) scale(.98)}
+  @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+
+  /* ---------------- 侧栏 ---------------- */
+  #panel{width:clamp(200px,19vw,262px); max-height:62vh; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:10px; padding-right:8px; scrollbar-gutter:stable}
+  #title{display:flex; align-items:baseline; gap:7px}
+  #title h1{
+    margin:0; font-size:clamp(19px,2.1vw,26px); line-height:1; white-space:nowrap; letter-spacing:-.4px;
+    background:linear-gradient(135deg,#3f9fd8,#7a6bd6 55%,#f48fb1);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #title span{font-size:10px; letter-spacing:2px; color:#8aa3b5}
+  @media (max-width:1080px){ #title span{display:none} }
+
+  .card{
+    background:rgba(255,255,255,.8); border:1px solid var(--line);
+    border-radius:16px; padding:12px 14px; box-shadow:0 10px 22px -20px rgba(42,92,124,.9);
+  }
+  .row{display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0}
+  .row > *{min-width:0}
+  .row .sub{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .label{font-size:10px; letter-spacing:1.5px; color:#8aa3b5; text-transform:uppercase}
+  #score{font-size:34px; font-weight:800; line-height:1.05; font-variant-numeric:tabular-nums}
+  #score.bump{animation:bump .3s cubic-bezier(.2,1.8,.4,1)}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .sub{font-size:11.5px; color:#7d93a5}
+  #best{font-weight:700; color:#3f9fd8}
+
+  #nextWrap{display:flex; align-items:center; gap:10px; margin-top:8px}
+  #nextCv{width:56px;height:56px;border-radius:15px;background:#f4fafd;border:1px solid var(--line);flex:none}
+  #nextName{font-weight:700; font-size:14px}
+  #nextDesc{font-size:10.5px; color:#8aa3b5; margin-top:2px}
+
+  /* 音量 */
+  .vol{display:flex; align-items:center; gap:8px; margin-top:8px}
+  .vol:first-of-type{margin-top:10px}
+  .vol .name{font-size:11.5px; color:#5f7386; width:30px; flex:none}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:99px;
+    background:#d6e6f1; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#3f9fd8; box-shadow:0 1px 4px rgba(63,159,216,.6); cursor:pointer;
+  }
+  .sw{
+    flex:none; width:34px; height:19px; border-radius:99px; border:0; cursor:pointer; position:relative;
+    background:#cddcea; transition:background .18s;
+  }
+  .sw::after{
+    content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .18s;
+  }
+  .sw[aria-pressed="true"]{background:#3f9fd8}
+  .sw[aria-pressed="true"]::after{transform:translateX(15px)}
+  .sw[aria-pressed="false"]{background:#cfd9e2}
+
+  #chain{display:flex; flex-direction:column; gap:4px; margin-top:6px}
+  /* 面板内嵌排行榜 */
+  .boardlist{display:flex;flex-direction:column;gap:3px;margin-top:6px;font-size:12px}
+  .brow{display:flex;align-items:center;gap:6px;padding:3px 5px;border-radius:7px}
+  .brow:nth-child(odd){background:#f7fbfe}
+  .brow.me{background:#e8f6ee;font-weight:700}
+  .brow .rk{width:14px;color:#a8bcc9;font-variant-numeric:tabular-nums;flex:none;font-size:11px}
+  .brow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4b5f70}
+  .brow .sc{font-weight:700;color:#2f6f96;font-variant-numeric:tabular-nums}
+  .brow.empty{color:#a8bcc9;justify-content:center;background:none}
+  .mini{border:0;background:transparent;color:#68a8cc;font:inherit;font-size:11px;cursor:pointer;padding:0;white-space:nowrap}
+  .mini:hover{color:#3f9fd8}
+  .link{display:flex; align-items:center; gap:7px; font-size:11.5px; color:#54687a}
+  .link img{width:21px;height:21px;border-radius:50%;object-fit:cover;flex:none;
+    box-shadow:0 0 0 1.5px #fff, 0 1px 4px rgba(0,0,0,.18); background:#e6f1f8}
+  .link .dot{width:21px;height:21px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
+  .link .sz{margin-left:auto; font-size:9.5px; color:#a8bcc9; font-variant-numeric:tabular-nums}
+  .link.locked{opacity:.38; filter:saturate(.15)}
+
+  #tools{display:flex; gap:6px}
+  .ibtn{
+    flex:1; border:1px solid var(--line); background:rgba(255,255,255,.85); border-radius:11px;
+    padding:8px 0; cursor:pointer; font:inherit; font-size:11.5px; color:#54687a;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    transition:background .15s,transform .1s;
+  }
+  .ibtn:hover{background:#fff}
+  .ibtn:active{transform:scale(.97)}
+  .hint{font-size:11px; color:#8aa3b5; line-height:1.65; display:none}
+  kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;
+      padding:0 4px;font-size:10px;font-family:inherit;color:#54687a}
+
+  /* ---------- 右侧竖向合成进度 ---------- */
+  #railWrap{
+    width:52px; flex:none; display:flex; flex-direction:column; align-items:center; gap:8px;
+    user-select:none; align-self:stretch; justify-content:center;
+  }
+  #railNum{font-size:11px; color:#7d93a5; font-variant-numeric:tabular-nums}
+  #rail{
+    position:relative; flex:1; width:100%; display:flex; flex-direction:column-reverse;
+    align-items:center; justify-content:space-between; padding:8px 0;
+  }
+  #rail::before{
+    content:''; position:absolute; left:50%; top:6px; bottom:6px; width:2px; margin-left:-1px;
+    background:linear-gradient(180deg, rgba(63,159,216,.38), rgba(63,159,216,.10)); border-radius:2px;
+  }
+  #rail .node{
+    position:relative; border-radius:50%; background:#fff; flex:none; overflow:hidden;
+    border:2px solid #fff; box-shadow:0 1px 4px rgba(30,70,100,.22);
+    transition:filter .2s, transform .2s, box-shadow .2s, opacity .2s;
+  }
+  #rail .node img{width:100%; height:100%; object-fit:cover; display:block}
+  #rail .node:not(.on){ filter:grayscale(1) brightness(1.15); opacity:.45 }
+  #rail .node.on{
+    transform:scale(1.06);
+    box-shadow:0 0 0 2px #fff, 0 2px 8px rgba(30,70,100,.3);
+  }
+
+  /* ---------- 难度按钮 ---------- */
+  #modes{display:flex; gap:6px; margin-top:7px}
+  .mbtn{
+    flex:1; border:1px solid var(--line); background:#fff; border-radius:10px; padding:7px 0;
+    font:inherit; font-size:12.5px; color:#54687a; cursor:pointer; transition:.15s;
+  }
+  .mbtn.on{
+    background:linear-gradient(180deg,#59b6e8,#3f9fd8); color:#fff;
+    border-color:transparent; box-shadow:0 6px 14px -8px rgba(63,159,216,.9);
+  }
+
+  /* ---------- 排行榜 ---------- */
+  .overlay{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(30,50,70,.45); backdrop-filter:blur(3px); z-index:50; padding:16px;
+  }
+  .overlay.show{display:flex}
+  .lbcard{
+    width:min(92vw, 380px); max-height:82vh; background:#fff; border-radius:18px; padding:14px 16px;
+    display:flex; flex-direction:column; gap:9px; box-shadow:0 24px 60px -20px rgba(20,40,60,.6);
+  }
+  .lbhead{display:flex; align-items:center; justify-content:space-between; font-size:16px}
+  .lbhead button{border:0; background:transparent; font-size:16px; cursor:pointer; color:#8aa3b5}
+  .lbtabs{display:flex; gap:6px}
+  .lbtab{
+    flex:1; border:1px solid var(--line); background:#fff; border-radius:9px; padding:6px 0;
+    font:inherit; font-size:12px; color:#54687a; cursor:pointer;
+  }
+  .lbtab.on{background:#eaf4fb; border-color:#9fd0ea; color:#2f6f96; font-weight:700}
+  .lblist{overflow:auto; max-height:44vh; display:flex; flex-direction:column; gap:4px; font-size:13px}
+  .lbrow{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:9px; background:#f7fbfe}
+  .lbrow .rk{width:20px; color:#8aa3b5; font-variant-numeric:tabular-nums; flex:none}
+  .lbrow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lbrow .sc{font-weight:800; color:#2f6f96; font-variant-numeric:tabular-nums}
+  .lbrow.me{background:#e8f6ee}
+  .lbfoot{display:flex; gap:6px}
+  .lbfoot input{flex:1; min-width:0; border:1px solid var(--line); border-radius:9px; padding:7px 9px; font:inherit; font-size:13px}
+  .lbfoot button{border:0; background:#3f9fd8; color:#fff; border-radius:9px; padding:0 14px; font:inherit; font-size:13px; cursor:pointer}
+  .lbtip{font-size:11.5px; color:#8aa3b5; line-height:1.5}
+
+  @media (max-width: 640px){
+    body{align-items:flex-start; padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+    #app{flex-direction:column; align-items:center; gap:8px}
+    #title{display:none}
+    #stage{width:min(94vw, 42vh, var(--stage-max, 380px)); border-radius:18px}
+    #panel{width:min(94vw,380px); max-height:none; flex-direction:column; gap:6px; padding-right:0}
+    .card{padding:7px 10px; border-radius:12px}
+    #score{font-size:24px}
+    #nextDesc{display:none}
+    #nextName{font-size:13px}
+    #nextCv{width:38px;height:38px}
+    #chainWrap{display:none}
+    #nextWrap{margin-top:3px; gap:7px}
+    .vol{margin-top:3px}
+    .vol:first-of-type{margin-top:5px}
+    .hint{display:none}
+    #railWrap{width:min(94vw,380px); flex-direction:row; align-items:center; gap:8px; margin-top:2px}
+    #rail{flex-direction:row; padding:3px 2px; height:auto}
+    #rail::before{display:none}
+    #railNum{width:auto; text-align:center}
+    #modeCard{order:-1}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="760" height="1120"></canvas>
+    <div id="banner">
+      <div class="card">
+        <h2 id="bTitle">合成大 ba</h2>
+        <p id="bText"></p>
+        <button class="bigbtn" id="bBtn">开始</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="title"><h1>合成大 ba</h1><span>MERGE</span></div>
+
+    <div class="card">
+      <div class="row"><span class="label">Score</span><span class="sub">最高 <span id="best">0</span></span></div>
+      <div id="score">0</div>
+      <div class="sub" id="meta" style="margin-top:2px">⏱ 0:00 · 0 球</div>
+      <div class="row" style="margin-top:8px"><span class="label">Next</span><span class="sub" id="comboTag"></span></div>
+      <div id="nextWrap">
+        <canvas id="nextCv" width="112" height="112"></canvas>
+        <div><div id="nextName">—</div><div id="nextDesc">下一个</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">音量</span>
+      <div class="vol">
+        <span class="name">音乐</span>
+        <input type="range" id="bgmVol" min="0" max="100" value="45">
+        <button class="sw" id="bgmSw" aria-pressed="true" title="开/关音乐"></button>
+      </div>
+      <div class="vol">
+        <span class="name">音效</span>
+        <input type="range" id="sfxVol" min="0" max="100" value="80">
+        <button class="sw" id="sfxSw" aria-pressed="true" title="开/关音效"></button>
+      </div>
+    </div>
+
+    <div class="card" id="boardCard">
+      <div class="row">
+        <span class="label">排行榜 · <span id="boardMode">简单</span></span>
+        <button class="mini" id="boardMore">全部 ›</button>
+      </div>
+      <div id="boardList" class="boardlist">加载中…</div>
+    </div>
+
+    <div id="tools">
+      <button class="ibtn" id="btnReset">↻ 重开</button>
+      <button class="ibtn" id="btnLB">🏆 排行</button>
+      <button class="ibtn" id="btnMute">🔊 静音</button>
+    </div>
+
+    <div class="card" id="modeCard">
+      <span class="label">难度</span>
+      <div id="modes">
+        <button class="mbtn" data-mode="easy">简单</button>
+        <button class="mbtn" data-mode="hard">困难</button>
+      </div>
+    </div>
+
+    <div class="hint">
+      <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>空格</kbd> 落下 · <kbd>R</kbd> 重开 · <kbd>M</kbd> 静音<br>
+      鼠标点/触摸屏幕也能玩。
+    </div>
+  </div>
+
+  <div id="railWrap">
+    <div class="label" id="railNum">1/11</div>
+    <div id="rail"></div>
+  </div>
+</div>
+
+<div id="lb" class="overlay">
+  <div class="lbcard">
+    <div class="lbhead"><b>排行榜</b><button id="lbClose">✕</button></div>
+    <div class="lbtabs">
+      <button class="lbtab on" data-lbmode="easy">简单</button>
+      <button class="lbtab" data-lbmode="hard">困难</button>
+    </div>
+    <div id="lbList" class="lblist">加载中…</div>
+    <div class="lbfoot">
+      <input id="lbName" maxlength="12" placeholder="你的昵称（最多 12 字）">
+      <button id="lbSave">保存</button>
+    </div>
+    <div class="lbtip" id="lbTip"></div>
+  </div>
+</div>
+
+<script>
+/* 脚本炸了也别只给一片黑 */
+(function () {
+  function fatal(msg, extra) {
+    var b = document.getElementById('banner');
+    if (!b) return;
+    var t = document.getElementById('bTitle'), x = document.getElementById('bText');
+    var btn = document.getElementById('bBtn');
+    if (t) t.textContent = '游戏没能启动';
+    if (x) { x.textContent = msg + (extra ? '  (' + extra + ')' : ''); x.style.fontFamily = 'ui-monospace,Consolas,monospace'; }
+    if (btn) { btn.textContent = '刷新重试'; btn.onclick = function () { location.reload(); }; }
+    b.classList.add('show');
+  }
+  window.addEventListener('error', function (e) {
+    var f = (e.filename || '').split('/').pop();
+    fatal(e.message || '脚本错误', f ? f + ':' + e.lineno : '');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason || {};
+    fatal('Promise 失败：' + (r.message || r), '');
+  });
+  window.__fatal = fatal;
+})();
+</script>
+<script src="config.js?v=2"></script>
+<script src="matter.min.js?v=2"></script>
+<script src="game.js?v=2"></script>
+</body>
+</html>
